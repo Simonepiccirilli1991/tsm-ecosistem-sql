@@ -1,3 +1,37 @@
 spring:
   application:
     name: wiam
+
+  # --- Configurazione DataSource SQLite ---
+  # Usiamo SQLite come database di runtime. Il file viene creato automaticamente
+  # nella cartella ./data/ relativa alla directory di esecuzione.
+  datasource:
+    url: jdbc:sqlite:./data/wiam.db
+    driver-class-name: org.sqlite.JDBC
+    # SQLite non supporta connection pool tradizionali — usiamo queste impostazioni
+    # per evitare errori di concorrenza (SQLite permette una sola scrittura alla volta)
+    hikari:
+      maximum-pool-size: 1
+
+  # --- Configurazione JPA / Hibernate ---
+  jpa:
+    # Il dialect dice a Hibernate come generare SQL specifico per SQLite.
+    # Usiamo il dialect della community perché Hibernate 7 non include SQLite di default.
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    # "update" crea le tabelle se non esistono e aggiunge colonne nuove,
+    # senza cancellare dati esistenti. Ideale per sviluppo.
+    hibernate:
+      ddl-auto: update
+    # Mostra le query SQL generate da Hibernate nella console — utile per debug.
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # --- H2 Console ---
+  # Abilitata per poter ispezionare il database via browser su /h2-console
+  # Nota: in produzione va disabilitata.
+  h2:
+    console:
+      enabled: true
+      path: /h2-console

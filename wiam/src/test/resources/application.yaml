@@ -1,0 +1,32 @@
+# --- Configurazione Test — H2 in-memory ---
+# Questo file sovrascrive application.yaml SOLO durante i test.
+# Usiamo H2 in-memory così ogni esecuzione di test parte da un database pulito,
+# senza toccare il database SQLite di sviluppo.
+
+spring:
+  application:
+    name: wiam-test
+
+  datasource:
+    # "mem:testdb" = database in memoria, non scrive su disco.
+    # DB_CLOSE_DELAY=-1 mantiene il DB vivo per tutta la durata della JVM di test.
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    # "create-drop" crea le tabelle all'avvio e le distrugge alla chiusura.
+    # Perfetto per i test: ogni run parte da zero.
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Disabilitiamo la H2 console nei test — non serve.
+  h2:
+    console:
+      enabled: false
