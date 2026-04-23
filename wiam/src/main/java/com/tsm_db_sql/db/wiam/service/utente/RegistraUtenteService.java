@@ -36,7 +36,11 @@ public class RegistraUtenteService {
             log.error("Utente gia registrato con username indicato");
             throw new UtenteException("Utente gia registrato con username indicato","ERR-UT-400");
         }
-
+        // controllo che email non sia gia in uso
+        if(utenteRepository.findByEmail(request.email()).isPresent()) {
+            log.error("Utente gia registrato con email indicato");
+            throw new UtenteException("Utente gia registrato con email indicata","ERR-UT-400");
+        }
         // se non esiste lo registro
         var utente = new Utente();
         utente.setUsername(request.username());

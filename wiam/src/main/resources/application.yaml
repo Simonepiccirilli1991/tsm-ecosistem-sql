@@ -1,7 +1,9 @@
 spring:
   application:
     name: wiam
-
+  threads:
+    virtual:
+      enabled: true
   # --- Configurazione DataSource SQLite ---
   # Usiamo SQLite come database di runtime. Il file viene creato automaticamente
   # nella cartella ./data/ relativa alla directory di esecuzione.
