@@ -124,7 +124,11 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+                <configuration>
+                    <source>26</source>
+                    <target>26</target>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 

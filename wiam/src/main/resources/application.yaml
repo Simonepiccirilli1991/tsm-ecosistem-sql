@@ -17,9 +17,11 @@ spring:
 
   # --- Configurazione JPA / Hibernate ---
   jpa:
-    # Il dialect dice a Hibernate come generare SQL specifico per SQLite.
-    # Usiamo il dialect della community perché Hibernate 7 non include SQLite di default.
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    # Non specifichiamo database-platform esplicitamente.
+    # Il jar hibernate-community-dialects registra un DialectResolver via SPI
+    # (META-INF/services) che rileva automaticamente SQLite dall'URL JDBC.
+    # Questo evita problemi di classloading in alcuni IDE.
+
     # "update" crea le tabelle se non esistono e aggiunge colonne nuove,
     # senza cancellare dati esistenti. Ideale per sviluppo.
     hibernate:
