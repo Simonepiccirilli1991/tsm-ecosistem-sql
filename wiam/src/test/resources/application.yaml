@@ -30,3 +30,9 @@ spring:
   h2:
     console:
       enabled: false
+
+# --- Logging ---
+# Stesso pattern del runtime, con tracingId dal MDC.
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{tracingId}] %-5level [%thread] %logger{36} - %msg%n"

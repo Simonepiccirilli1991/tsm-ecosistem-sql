@@ -37,3 +37,11 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+# --- Logging ---
+# Il pattern include [%X{tracingId}] che legge il valore dal MDC di SLF4J.
+# Grazie al TracingFilter, ogni richiesta HTTP avrà un tracingId nel MDC,
+# e apparirà automaticamente in ogni riga di log.
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{tracingId}] %-5level [%thread] %logger{36} - %msg%n"
