@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -45,14 +46,16 @@ public class RetrivePswStep1Service {
         // caso otp == 5 ma time counter non su puo resettare lancio eccezzione
         if(utenteOtpCounter >= 5 && (LocalDateTime.now().isAfter(utente.getUtenteSecurety().getDataRichiestaUltimoOtp().plusDays(1)))){
           log.error("Error on RetrivePswStep1 service: otp giornaliero massimo raggiunto");
-          throw new UtenteException("Error on RetrivePswStep1 service, max otp requested","ERR-UT-401");
+          throw new UtenteSecuretyException("Error on RetrivePswStep1 service, max otp requested","ERR-UT-401");
         }
         // genero otp
         var otp = generaOtp();
         // cripto otp
         var otpCriptato = cifraOtp(otp);
+        // potrebbe essere la prima volta che richiede otp, se data richiesta ultimo otp e null setto a 24 ore prima per far si che possa richiedere subito, altrimenti lascio la data precedente
+        var dataOtpUltimaRic = (ObjectUtils.isEmpty(utente.getUtenteSecurety().getDataRichiestaUltimoOtp())) ? LocalDateTime.now().minusDays(1) : utente.getUtenteSecurety().getDataRichiestaUltimoOtp();
         // calcolo counter, se possono passate 24 ore setto a 1, altrimenti aumento dal precedente, logica e a 24 ore da ultima richiesta, non giornaliera su 24
-        var counter =(LocalDateTime.now().isBefore(utente.getUtenteSecurety().getDataRichiestaUltimoOtp().plusDays(1))) ? 1 : utenteOtpCounter + 1;
+        var counter =(LocalDateTime.now().isBefore(dataOtpUltimaRic.plusDays(1))) ? 1 : utenteOtpCounter + 1;
         utente.getUtenteSecurety().setOtp(otp);
         utente.getUtenteSecurety().setOtpCounter(counter);
         utenteRepository.save(utente);

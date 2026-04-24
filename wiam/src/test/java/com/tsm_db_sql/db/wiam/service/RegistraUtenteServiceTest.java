@@ -70,7 +70,7 @@ public class RegistraUtenteServiceTest {
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
         utente.setPassword("BeaMerda");
-        utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
         utenteRepository.save(utente);
@@ -93,7 +93,7 @@ public class RegistraUtenteServiceTest {
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
         utente.setPassword("BeaMerda");
-        utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
         utenteRepository.save(utente);
@@ -116,7 +116,7 @@ public class RegistraUtenteServiceTest {
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
         utente.setPassword("BeaMerda");
-        utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
         utenteRepository.save(utente);
@@ -139,7 +139,7 @@ public class RegistraUtenteServiceTest {
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
         utente.setPassword("BeaMerda");
-        utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
         utenteRepository.save(utente);
@@ -161,7 +161,7 @@ public class RegistraUtenteServiceTest {
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
         utente.setPassword("BeaMerda");
-        utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
         utenteRepository.save(utente);

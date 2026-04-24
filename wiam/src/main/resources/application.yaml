@@ -34,7 +34,7 @@ spring:
 #Chiave segreta wiam otp
 wiam:
   otp:
-    secret: ${wiam.otp.secret:default-otp-secret-key}
+    secret-key: ${wiam.otp.secret:default-otp-secret-key-999999999}
 #-- configurazione per admin --#
 roles:
     admin:

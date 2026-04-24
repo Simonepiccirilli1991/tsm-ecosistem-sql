@@ -1,5 +1,8 @@
 package com.tsm_db_sql.db.wiam.exception;
 
+import lombok.Data;
+
+@Data
 public class UtenteSecuretyException extends RuntimeException {
 
     private String messaggio;
