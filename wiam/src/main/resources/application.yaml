@@ -32,6 +32,12 @@ spring:
       hibernate:
         format_sql: true
 
+#-- configurazione per admin --#
+roles:
+    admin:
+      email: ${admin.email:test1234@gmail.com}
+    collaborator:
+      email: ${collaborator.email:collab123@gmail.com}
   # --- H2 Console ---
   # Abilitata per poter ispezionare il database via browser su /h2-console
   # Nota: in produzione va disabilitata.

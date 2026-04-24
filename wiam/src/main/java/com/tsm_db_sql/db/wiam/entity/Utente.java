@@ -1,6 +1,7 @@
 package com.tsm_db_sql.db.wiam.entity;
 
 
+import com.tsm_db_sql.db.wiam.utils.UtenteRoles;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -31,6 +32,10 @@ public class Utente {
     private String password;
     @Column(nullable = false)
     private String dataRegistrazione;
+    // gestione ruolo
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UtenteRoles ruolo;
 
     /*
      * Relazione 1:1 con UtenteSecurety (dati di sicurezza come OTP, cambio password).

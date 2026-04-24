@@ -7,9 +7,12 @@ import com.tsm_db_sql.db.wiam.model.request.DeleteUtenteRequest;
 import com.tsm_db_sql.db.wiam.model.request.RegistraUtenteRequest;
 import com.tsm_db_sql.db.wiam.model.response.RegistrazioneResponse;
 import com.tsm_db_sql.db.wiam.repository.UtenteRepository;
+import com.tsm_db_sql.db.wiam.utils.UtenteRoles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,7 +24,10 @@ public class RegistraUtenteService {
 
 
     private final UtenteRepository utenteRepository;
-
+    @Value("${roles.admin.email}")
+    private String emailAdmin;
+    @Value("${roles.admin.collaborator}")
+    private String emailCollaboratore;
 
 
     public RegistrazioneResponse registraUtente(RegistraUtenteRequest request) {
@@ -49,6 +55,9 @@ public class RegistraUtenteService {
         utente.setNome(request.nome());
         utente.setCognome(request.cognome());
         utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        // devo settare il ruolo
+        var ruolo = determinaRuolo(request.email());
+        utente.setRuolo(ruolo);
 
         // salvo utente
         utenteRepository.save(utente);
@@ -76,5 +85,13 @@ public class RegistraUtenteService {
         utenteRepository.delete(utente);
         log.info("Cancella utente service ended successuflly");
         return new RegistrazioneResponse("Utente cancellato con successo");
+    }
+
+    // messa qui, perche se uso operatore ternario sonar si incazza perche difficile da leggere, bestie
+    private UtenteRoles determinaRuolo(String email){
+        if(email.equals(emailAdmin)) {
+            return UtenteRoles.Admin;
+        }
+        return (email.equals(emailCollaboratore)) ? UtenteRoles.Collaborator : UtenteRoles.User;
     }
 }
