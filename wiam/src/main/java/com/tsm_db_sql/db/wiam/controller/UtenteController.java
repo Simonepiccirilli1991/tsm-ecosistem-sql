@@ -8,7 +8,7 @@ import com.tsm_db_sql.db.wiam.model.request.RegistraUtenteRequest;
 import com.tsm_db_sql.db.wiam.model.response.LoginUtenteResponse;
 import com.tsm_db_sql.db.wiam.model.response.RegistrazioneResponse;
 import com.tsm_db_sql.db.wiam.service.securety.ChangePswService;
-import com.tsm_db_sql.db.wiam.service.utente.BaseResponse;
+import com.tsm_db_sql.db.wiam.model.response.BaseResponse;
 import com.tsm_db_sql.db.wiam.service.utente.LoginUtenteService;
 import com.tsm_db_sql.db.wiam.service.utente.RegistraUtenteService;
 import lombok.RequiredArgsConstructor;

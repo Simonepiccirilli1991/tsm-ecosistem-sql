@@ -3,7 +3,7 @@ package com.tsm_db_sql.db.wiam.service.securety;
 import com.tsm_db_sql.db.wiam.exception.UtenteException;
 import com.tsm_db_sql.db.wiam.model.request.ChangePswRequest;
 import com.tsm_db_sql.db.wiam.repository.UtenteRepository;
-import com.tsm_db_sql.db.wiam.service.utente.BaseResponse;
+import com.tsm_db_sql.db.wiam.model.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

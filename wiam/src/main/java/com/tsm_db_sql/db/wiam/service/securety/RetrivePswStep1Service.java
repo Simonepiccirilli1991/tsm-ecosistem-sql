@@ -22,7 +22,7 @@ import java.util.Random;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class RetrivePswService {
+public class RetrivePswStep1Service {
 
     private final UtenteRepository utenteRepository;
     private Random random = new Random();

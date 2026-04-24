@@ -36,5 +36,8 @@ public class UtenteSecurety {
     private String otp;
     private LocalDateTime otpTimeRequest;
 
+    private String chiaveStep3;
+    private LocalDateTime durataChiaveStep3;
+
     private String lastPaswordChange;
 }
