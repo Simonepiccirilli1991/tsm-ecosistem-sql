@@ -50,7 +50,8 @@ public class Utente {
      * - @JoinColumn: crea una colonna FK "utente_securety_id" sulla tabella utente
      *   che punta all'id di utente_securety. Il nome descrive il contenuto (un ID).
      */
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // passato a eager in quanto non pregica le performance essendo 1 a 1   eocn pochi campi
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "utente_securety_id", referencedColumnName = "id")
     private UtenteSecurety utenteSecurety;
 

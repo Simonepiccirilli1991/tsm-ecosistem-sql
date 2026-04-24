@@ -2,6 +2,7 @@ package com.tsm_db_sql.db.wiam.service.utente;
 
 
 import com.tsm_db_sql.db.wiam.entity.Utente;
+import com.tsm_db_sql.db.wiam.entity.UtenteSecurety;
 import com.tsm_db_sql.db.wiam.exception.UtenteException;
 import com.tsm_db_sql.db.wiam.model.request.DeleteUtenteRequest;
 import com.tsm_db_sql.db.wiam.model.request.RegistraUtenteRequest;
@@ -26,7 +27,7 @@ public class RegistraUtenteService {
     private final UtenteRepository utenteRepository;
     @Value("${roles.admin.email}")
     private String emailAdmin;
-    @Value("${roles.admin.collaborator}")
+    @Value("${roles.collaborator.email}")
     private String emailCollaboratore;
 
 
@@ -58,7 +59,9 @@ public class RegistraUtenteService {
         // devo settare il ruolo
         var ruolo = determinaRuolo(request.email());
         utente.setRuolo(ruolo);
-
+        // var setto utente securety
+        var utSec = settaUtenteSecurety(utente);
+        utente.setUtenteSecurety(utSec);
         // salvo utente
         utenteRepository.save(utente);
         log.info("RegistraUtente service ended successfully");
@@ -93,5 +96,18 @@ public class RegistraUtenteService {
             return UtenteRoles.Admin;
         }
         return (email.equals(emailCollaboratore)) ? UtenteRoles.Collaborator : UtenteRoles.User;
+    }
+
+    /*
+    Sì, è buona pratica mantenerlo, per un motivo preciso: la consistenza del grafo oggetti in memoria.
+Se durante la stessa sessione JPA qualcuno fa utenteSecurety.getUtente(), senza quel set troverebbe null, anche se nel DB la relazione è corretta. Questo può causare bug sottili in logica che attraversa la relazione dal lato inverso.
+La convenzione standard in JPA è sempre sincronizzare entrambi i lati di una relazione bidirezionale:
+     */
+    private UtenteSecurety settaUtenteSecurety(Utente utente) {
+        var utenteSecurety = new UtenteSecurety();
+        utenteSecurety.setOtpCounter(0);
+        utenteSecurety.setLastPaswordChange(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utenteSecurety.setUtente(utente);
+        return utenteSecurety;
     }
 }

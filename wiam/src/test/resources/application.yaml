@@ -15,6 +15,12 @@ spring:
     username: sa
     password:
 
+roles:
+  admin:
+    email: ${admin.email:test1234@gmail.com}
+  collaborator:
+    email: ${collaborator.email:collab123@gmail.com}
+
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     # "create-drop" crea le tabelle all'avvio e le distrugge alla chiusura.
