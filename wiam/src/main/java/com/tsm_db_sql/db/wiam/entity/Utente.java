@@ -5,6 +5,7 @@ import com.tsm_db_sql.db.wiam.utils.UtenteRoles;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class Utente {
     @Column(nullable = false)
     private String password;
     @Column(nullable = false)
-    private String dataRegistrazione;
+    private LocalDateTime dataRegistrazione;
     // gestione ruolo
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

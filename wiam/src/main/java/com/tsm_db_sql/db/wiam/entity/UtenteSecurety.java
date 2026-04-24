@@ -4,6 +4,8 @@ package com.tsm_db_sql.db.wiam.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * Entity di sicurezza — contiene dati OTP e tracking cambio password.
  * Legata 1:1 all'entity Utente (un utente ha esattamente un record di sicurezza).
@@ -30,6 +32,9 @@ public class UtenteSecurety {
     private Utente utente;
 
     private Integer otpCounter;
-    private String dataRichiestaUltimoOtp;
+    private LocalDateTime dataRichiestaUltimoOtp;
+    private String otp;
+    private LocalDateTime otpTimeRequest;
+
     private String lastPaswordChange;
 }

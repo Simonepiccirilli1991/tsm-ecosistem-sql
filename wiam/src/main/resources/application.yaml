@@ -31,7 +31,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+#Chiave segreta wiam otp
+wiam:
+  otp:
+    secret: ${wiam.otp.secret:default-otp-secret-key}
 #-- configurazione per admin --#
 roles:
     admin:

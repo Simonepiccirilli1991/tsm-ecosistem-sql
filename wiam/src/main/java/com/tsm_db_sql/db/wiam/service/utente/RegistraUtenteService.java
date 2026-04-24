@@ -55,7 +55,7 @@ public class RegistraUtenteService {
         utente.setEmail(request.email());
         utente.setNome(request.nome());
         utente.setCognome(request.cognome());
-        utente.setDataRegistrazione(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.setDataRegistrazione(LocalDateTime.now());
         // devo settare il ruolo
         var ruolo = determinaRuolo(request.email());
         utente.setRuolo(ruolo);
