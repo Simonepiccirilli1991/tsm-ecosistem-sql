@@ -12,15 +12,17 @@ import com.tsm_db_sql.db.wiam.utils.UtenteRoles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class RegistraUtenteService {
 
 
@@ -106,7 +108,7 @@ La convenzione standard in JPA è sempre sincronizzare entrambi i lati di una re
     private UtenteSecurety settaUtenteSecurety(Utente utente) {
         var utenteSecurety = new UtenteSecurety();
         utenteSecurety.setOtpCounter(0);
-        utenteSecurety.setLastPaswordChange(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utenteSecurety.setLastPaswordChange(LocalDateTime.now());
         utenteSecurety.setUtente(utente);
         return utenteSecurety;
     }

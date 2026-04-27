@@ -7,13 +7,14 @@ import com.tsm_db_sql.db.wiam.model.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class ChangePswService {
 
 
@@ -43,7 +44,7 @@ public class ChangePswService {
 
         // cambio effettivamente la psw
         utente.setPassword(request.newPassword());
-        utente.getUtenteSecurety().setLastPaswordChange(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        utente.getUtenteSecurety().setLastPaswordChange(LocalDateTime.now());
         utenteRepository.save(utente);
         log.info("ChangePswService ended successfully for utente: {}",request.username());
         return new BaseResponse("Password cambiata con successo");

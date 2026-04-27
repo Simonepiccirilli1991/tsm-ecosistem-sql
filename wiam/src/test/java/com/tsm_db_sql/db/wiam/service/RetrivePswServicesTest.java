@@ -156,8 +156,6 @@ public class RetrivePswServicesTest {
        Assertions.assertEquals("Otp non valido",except.getMessaggio());
     }
 
-    // test per step 2ko mancante e step 3, pou code reviuw con opus
-
     @Test
     void retrivePswStep3OK() {
 

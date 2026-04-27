@@ -7,6 +7,12 @@ import com.tsm_db_sql.db.wiam.utils.StatoProdotto;
 import com.tsm_db_sql.db.wiam.utils.TipoProdotto;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Entity inventario — rappresenta un singolo acquisto/prodotto nell'inventario di un utente.
@@ -14,6 +20,9 @@ import lombok.Data;
  */
 @Data
 @Entity(name = "utente_inventario")
+@Table(indexes = {
+        @Index(name = "idx_inventario_utente_id", columnList = "utente_id")
+})
 public class UtenteInventario {
 
     @Id
@@ -36,9 +45,13 @@ public class UtenteInventario {
     @JoinColumn(name = "utente_id", nullable = false)
     private Utente utente;
 
+    @Column(nullable = false, length = 200)
     private String nomeAcquisto;
+    @Column(length = 100)
     private String codiceAcquisto;
-    private String dataAcquisto;
+    @Column(nullable = false)
+    private LocalDate dataAcquisto;
+    @Column(length = 500)
     private String descrizione;
 
     /*
@@ -51,21 +64,37 @@ public class UtenteInventario {
      * Con STRING, il valore salvato è il testo — non cambia mai anche se riordiniamo l'enum.
      */
     @Enumerated(EnumType.STRING)
+    @Column(length = 30)
     private BrandAcquisti brandProdotto;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 30)
     private TipoProdotto tipoProdotto;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 30)
     private StatoProdotto statoProdotto;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 30)
     private StatoAcq statoAcquisto;
 
     // --- Sezione vendita ---
-    private Double prezzoVendita;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal prezzoVendita;
+    @Column(length = 100)
     private String piattaformaVendita;
-    private String dataVendita;
-    private Double costiAccessori;
-    private Double prezzoNetto;
+    private LocalDate dataVendita;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal costiAccessori;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal prezzoNetto;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }

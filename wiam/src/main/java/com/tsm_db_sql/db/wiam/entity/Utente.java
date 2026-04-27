@@ -4,6 +4,9 @@ package com.tsm_db_sql.db.wiam.entity;
 import com.tsm_db_sql.db.wiam.utils.UtenteRoles;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,27 +18,34 @@ import java.util.List;
  * che l'inventario degli acquisti (UtenteInventario).
  */
 @Data
+@EqualsAndHashCode(exclude = {"utenteSecurety", "inventario"})
 @Entity(name = "utente")
+@Table(indexes = {
+        @Index(name = "idx_utente_username", columnList = "username"),
+        @Index(name = "idx_utente_email", columnList = "email")
+})
 public class Utente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
     private String nome;
+    @Column(nullable = false, length = 100)
     private String cognome;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 150)
     private String email;
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 50)
     private String username;
     @Column(nullable = false)
     private String password;
     @Column(nullable = false)
     private LocalDateTime dataRegistrazione;
-    // gestione ruolo
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private UtenteRoles ruolo;
 
     /*
@@ -45,13 +55,11 @@ public class Utente {
      *   automaticamente su UtenteSecurety. Non serve salvarlo a parte.
      * - orphanRemoval = true: se mettiamo utenteSecurety = null, Hibernate cancella
      *   il record orfano dal DB. Senza questo flag resterebbe una riga senza padre.
-     * - FetchType.LAZY: i dati di sicurezza vengono caricati dal DB solo quando li
-     *   accediamo davvero (es. utente.getUtenteSecurety()). Migliora le performance
-     *   perché non facciamo JOIN inutili ogni volta che carichiamo un Utente.
+     * - FetchType.EAGER: i dati di sicurezza sono sempre necessari nelle operazioni utente
+     *   e l'entity ha pochi campi, quindi EAGER non impatta le performance.
      * - @JoinColumn: crea una colonna FK "utente_securety_id" sulla tabella utente
-     *   che punta all'id di utente_securety. Il nome descrive il contenuto (un ID).
+     *   che punta all'id di utente_securety.
      */
-    // passato a eager in quanto non pregica le performance essendo 1 a 1   eocn pochi campi
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "utente_securety_id", referencedColumnName = "id")
     private UtenteSecurety utenteSecurety;
@@ -69,5 +77,30 @@ public class Utente {
      */
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UtenteInventario> inventario = new ArrayList<>();
-}
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    /**
+     * Helper per sincronizzazione bidirezionale — setta entrambi i lati della relazione 1:1.
+     */
+    public void impostaUtenteSecurety(UtenteSecurety sec) {
+        this.utenteSecurety = sec;
+        if (sec != null) {
+            sec.setUtente(this);
+        }
+    }
+
+    /**
+     * Helper per sincronizzazione bidirezionale — aggiunge un item e setta il lato owning.
+     */
+    public void aggiungiInventarioItem(UtenteInventario item) {
+        this.inventario.add(item);
+        item.setUtente(this);
+    }
+}

@@ -2,6 +2,8 @@ package com.tsm_db_sql.db.wiam.repository;
 
 import com.tsm_db_sql.db.wiam.entity.Utente;
 import com.tsm_db_sql.db.wiam.entity.UtenteInventario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -16,4 +18,6 @@ import java.util.List;
 public interface InventarioRepository extends JpaRepository<UtenteInventario, Long> {
 
     List<UtenteInventario> findByUtente(Utente utente);
+
+    Page<UtenteInventario> findByUtente(Utente utente, Pageable pageable);
 }

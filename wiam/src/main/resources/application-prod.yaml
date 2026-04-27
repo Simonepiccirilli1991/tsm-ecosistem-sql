@@ -1,0 +1,11 @@
+# --- Configurazione Produzione ---
+# Sovrascrive application.yaml per ambienti di produzione.
+# Attivare con: --spring.profiles.active=prod
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  h2:
+    console:
+      enabled: false

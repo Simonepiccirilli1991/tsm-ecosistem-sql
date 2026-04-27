@@ -54,7 +54,9 @@ public class ChangePswServiceTest {
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
         // siccome non chiamo api se non setto si sfascia perche giustamente va in nullpointer
-        utente.setUtenteSecurety(new UtenteSecurety());
+        var sec = new UtenteSecurety();
+        sec.setOtpCounter(0);
+        utente.setUtenteSecurety(sec);
 
         utenteRepository.save(utente);
 

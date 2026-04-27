@@ -8,12 +8,15 @@ spring:
   # Usiamo SQLite come database di runtime. Il file viene creato automaticamente
   # nella cartella ./data/ relativa alla directory di esecuzione.
   datasource:
-    url: jdbc:sqlite:./data/wiam.db
+    url: jdbc:sqlite:./data/wiam.db?journal_mode=WAL&busy_timeout=30000
     driver-class-name: org.sqlite.JDBC
     # SQLite non supporta connection pool tradizionali — usiamo queste impostazioni
     # per evitare errori di concorrenza (SQLite permette una sola scrittura alla volta)
     hikari:
       maximum-pool-size: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   # --- Configurazione JPA / Hibernate ---
   jpa:
