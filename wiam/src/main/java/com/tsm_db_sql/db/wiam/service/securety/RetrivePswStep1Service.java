@@ -56,8 +56,15 @@ public class RetrivePswStep1Service {
         var dataOtpUltimaRic = (ObjectUtils.isEmpty(utente.getUtenteSecurety().getDataRichiestaUltimoOtp())) ? LocalDateTime.now().minusDays(1) : utente.getUtenteSecurety().getDataRichiestaUltimoOtp();
         // calcolo counter, se possono passate 24 ore setto a 1, altrimenti aumento dal precedente, logica e a 24 ore da ultima richiesta, non giornaliera su 24
         var counter =(LocalDateTime.now().isBefore(dataOtpUltimaRic.plusDays(1))) ? 1 : utenteOtpCounter + 1;
+        // setto otp
         utente.getUtenteSecurety().setOtp(otp);
+        //setto counter
         utente.getUtenteSecurety().setOtpCounter(counter);
+        // setto ora richiesta ultimo otp
+        utente.getUtenteSecurety().setDataRichiestaUltimoOtp(LocalDateTime.now());
+        // setto data durata otp valido
+        utente.getUtenteSecurety().setOtpTimeRequest(LocalDateTime.now());
+        // salvo
         utenteRepository.save(utente);
         log.info("RetrivePswStep1 service ended successfully for utente: {}",utente.getUsername());
         return new RetrivePswStep1Response(utente.getEmail(), otpCriptato);
@@ -73,7 +80,8 @@ public class RetrivePswStep1Service {
         return otp.toString();
     }
 
-    private String cifraOtp(String otp) {
+    // publico per caso di test junit, altrimente sarebbe private
+    public String cifraOtp(String otp) {
         try {
             // Recupera la chiave segreta dalla configurazione (32 caratteri = 256 bit per AES)
             byte[] keyBytes = otpSecretKey.getBytes(StandardCharsets.UTF_8);

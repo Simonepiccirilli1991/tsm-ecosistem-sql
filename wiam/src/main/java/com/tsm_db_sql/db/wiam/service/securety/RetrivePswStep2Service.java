@@ -42,7 +42,7 @@ public class RetrivePswStep2Service {
                 });
         var utenteSecurety = utente.getUtenteSecurety();
         // controllo che otp sia ancora valido, valido per 2 minuti
-        if(utenteSecurety.getOtpTimeRequest().plusMinutes(2).isAfter(LocalDateTime.now())) {
+        if(utenteSecurety.getOtpTimeRequest().plusMinutes(2).isBefore(LocalDateTime.now())) {
             log.error("Otp time request scaduto per utente: {}", request.username());
             throw new UtenteSecuretyException("Otp scaduto","ERR-SEC-401");
         }

@@ -33,7 +33,7 @@ public class RetrivePswStep3Service {
 
         var utenteSecurety = utente.getUtenteSecurety();
         // controllo che chiave sia ancora valida
-        if(utenteSecurety.getDurataChiaveStep3().isAfter(LocalDateTime.now())){
+        if(utenteSecurety.getDurataChiaveStep3().isBefore(LocalDateTime.now())){
             log.error("RetrivePswStep3 service error chiave scaduta per utente: {}", request.username());
             // cancello chiave in quanto scaduta
             cancellaStepChiave(utenteSecurety,utente);
