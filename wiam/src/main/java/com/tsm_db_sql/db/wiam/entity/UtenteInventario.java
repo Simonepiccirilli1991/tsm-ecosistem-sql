@@ -79,6 +79,10 @@ public class UtenteInventario {
     @Column(length = 30)
     private StatoAcq statoAcquisto;
 
+    // Prezzo pagato per l'acquisto del prodotto — usato per calcoli di profitto e filtri inquiry
+    @Column(precision = 10, scale = 2)
+    private BigDecimal prezzoAcquisto;
+
     // --- Sezione vendita ---
     @Column(precision = 10, scale = 2)
     private BigDecimal prezzoVendita;

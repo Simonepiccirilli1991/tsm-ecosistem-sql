@@ -7,6 +7,8 @@ import com.tsm_db_sql.db.wiam.utils.TipoProdotto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 
+import java.math.BigDecimal;
+
 /**
  * Request per aggiungere un nuovo acquisto all'inventario di un utente.
  * Contiene tutti i dati obbligatori per creare un item di inventario.
@@ -20,7 +22,8 @@ public record AggiungiAcquistoRequest(
         String descrizione,
         BrandAcquisti brandProdotto,
         TipoProdotto tipoProdotto,
-        StatoProdotto statoProdotto
+        StatoProdotto statoProdotto,
+        BigDecimal prezzoAcquisto
 ) {
 
     /**
@@ -31,7 +34,8 @@ public record AggiungiAcquistoRequest(
     public void validaRequest() {
         if (ObjectUtils.isEmpty(username) || ObjectUtils.isEmpty(nomeAcquisto)
                 || ObjectUtils.isEmpty(dataAcquisto) || ObjectUtils.isEmpty(brandProdotto)
-                || ObjectUtils.isEmpty(tipoProdotto) || ObjectUtils.isEmpty(statoProdotto)) {
+                || ObjectUtils.isEmpty(tipoProdotto) || ObjectUtils.isEmpty(statoProdotto)
+                || ObjectUtils.isEmpty(prezzoAcquisto)){
             log.error("AggiungiAcquistoRequest validazione fallita: campi obbligatori mancanti. Request: {}", this);
             throw new InventarioException("Request non valida, campi obbligatori mancanti", "ERR-INV-400");
         }

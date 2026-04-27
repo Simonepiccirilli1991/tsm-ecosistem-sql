@@ -62,6 +62,10 @@ public class AggiungiAcquistoService {
         // Stato acquisto iniziale: ogni nuovo item parte come "Acquistato"
         item.setStatoAcquisto(StatoAcq.Acquistato);
 
+        // Prezzo acquisto  non è opzionale
+        item.setPrezzoAcquisto(request.prezzoAcquisto());
+
+
         // Passo 5: uso il metodo helper dell'entity Utente per sincronizzare
         // entrambi i lati della relazione bidirezionale (utente → item e item → utente).
         // Senza questa sincronizzazione, il grafo oggetti JPA in memoria sarebbe inconsistente.

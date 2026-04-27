@@ -7,12 +7,15 @@ import com.tsm_db_sql.db.wiam.model.request.AggiungiAcquistoRequest;
 import com.tsm_db_sql.db.wiam.model.request.AggiungiVenditaRequest;
 import com.tsm_db_sql.db.wiam.model.request.CancellaAcquistoRequest;
 import com.tsm_db_sql.db.wiam.model.request.CancellaVenditaRequest;
+import com.tsm_db_sql.db.wiam.model.request.InventarioInquiryRequest;
 import com.tsm_db_sql.db.wiam.repository.InventarioRepository;
 import com.tsm_db_sql.db.wiam.repository.UtenteRepository;
 import com.tsm_db_sql.db.wiam.service.inventario.AggiungiAcquistoService;
 import com.tsm_db_sql.db.wiam.service.inventario.AggiungiVenditaService;
 import com.tsm_db_sql.db.wiam.service.inventario.CancellaAcquistoService;
 import com.tsm_db_sql.db.wiam.service.inventario.CancellaVenditaService;
+import com.tsm_db_sql.db.wiam.service.inventario.InventarioInquiryService;
+import com.tsm_db_sql.db.wiam.service.inventario.InventarioInquiryV2Service;
 import com.tsm_db_sql.db.wiam.utils.BrandAcquisti;
 import com.tsm_db_sql.db.wiam.utils.StatoAcq;
 import com.tsm_db_sql.db.wiam.utils.StatoProdotto;
@@ -41,6 +44,10 @@ public class InventarioServiceTest {
     CancellaVenditaService cancellaVenditaService;
     @Autowired
     CancellaAcquistoService cancellaAcquistoService;
+    @Autowired
+    InventarioInquiryService inventarioInquiryService;
+    @Autowired
+    InventarioInquiryV2Service inventarioInquiryV2Service;
     @Autowired
     UtenteRepository utenteRepository;
     @Autowired
@@ -77,7 +84,7 @@ public class InventarioServiceTest {
         var request = new AggiungiAcquistoRequest(
                 "testuser", "Booster Box Pokemon", "BB-001",
                 "2024-06-15", "Box sigillato Scarlet & Violet",
-                "Pokemon", "BoxSealed", "Sealed");
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, StatoProdotto.Sealed, new BigDecimal("89.90"));
 
         var response = aggiungiAcquistoService.aggiungiAcquisto(request);
 
@@ -94,6 +101,7 @@ public class InventarioServiceTest {
         Assertions.assertEquals(TipoProdotto.BoxSealed, item.getTipoProdotto());
         Assertions.assertEquals(StatoProdotto.Sealed, item.getStatoProdotto());
         Assertions.assertEquals(StatoAcq.Acquistato, item.getStatoAcquisto());
+        Assertions.assertEquals(new BigDecimal("89.90"), item.getPrezzoAcquisto());
     }
 
     @Test
@@ -101,7 +109,7 @@ public class InventarioServiceTest {
         var request = new AggiungiAcquistoRequest(
                 "utente_inesistente", "Box", null,
                 "2024-06-15", null,
-                "Pokemon", "BoxSealed", "Sealed");
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, StatoProdotto.Sealed, new BigDecimal("50.00"));
 
         var ex = Assertions.assertThrows(InventarioException.class,
                 () -> aggiungiAcquistoService.aggiungiAcquisto(request));
@@ -114,7 +122,7 @@ public class InventarioServiceTest {
         var request = new AggiungiAcquistoRequest(
                 "testuser", null, null,
                 null, null,
-                null, null, null);
+                null, null, null, null);
 
         var ex = Assertions.assertThrows(InventarioException.class,
                 () -> aggiungiAcquistoService.aggiungiAcquisto(request));
@@ -123,17 +131,17 @@ public class InventarioServiceTest {
     }
 
     @Test
-    void aggiungiAcquistoKO_enumNonValido() {
+    void aggiungiAcquistoKO_senzaPrezzoAcquisto() {
         creaUtenteDiTest();
 
+        // prezzoAcquisto è ora obbligatorio — verifica che fallisca senza
         var request = new AggiungiAcquistoRequest(
-                "testuser", "Box", null,
+                "testuser", "Box Lego", null,
                 "2024-06-15", null,
-                "BrandInesistente", "BoxSealed", "Sealed");
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, StatoProdotto.Sealed, null);
 
         var ex = Assertions.assertThrows(InventarioException.class,
                 () -> aggiungiAcquistoService.aggiungiAcquisto(request));
-
         Assertions.assertEquals("ERR-INV-400", ex.getErrorCode());
     }
 
@@ -325,7 +333,7 @@ public class InventarioServiceTest {
         var acquistoResp = aggiungiAcquistoService.aggiungiAcquisto(new AggiungiAcquistoRequest(
                 "testuser", "Display Pokemon", "DP-001",
                 "2024-06-01", "Display 36 buste",
-                "Pokemon", "BoxSealed", "Sealed"));
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, StatoProdotto.Sealed, new BigDecimal("120.00")));
         Assertions.assertEquals("Acquisto aggiunto con successo all'inventario", acquistoResp.messaggio());
 
         var items = inventarioRepository.findByUtente(utente);
@@ -365,7 +373,424 @@ public class InventarioServiceTest {
         item.setTipoProdotto(TipoProdotto.BoxSealed);
         item.setStatoProdotto(StatoProdotto.Sealed);
         item.setStatoAcquisto(StatoAcq.Acquistato);
+        item.setPrezzoAcquisto(new BigDecimal("50.00"));
         utente.aggiungiInventarioItem(item);
         return inventarioRepository.save(item);
+    }
+
+    /**
+     * Helper — crea un item con parametri personalizzati per i test inquiry.
+     */
+    private UtenteInventario creaItemPersonalizzato(Utente utente, String nome, LocalDate data,
+            BrandAcquisti brand, TipoProdotto tipo, BigDecimal prezzo) {
+        var item = new UtenteInventario();
+        item.setNomeAcquisto(nome);
+        item.setDataAcquisto(data);
+        item.setBrandProdotto(brand);
+        item.setTipoProdotto(tipo);
+        item.setStatoProdotto(StatoProdotto.Sealed);
+        item.setStatoAcquisto(StatoAcq.Acquistato);
+        item.setPrezzoAcquisto(prezzo);
+        utente.aggiungiInventarioItem(item);
+        return inventarioRepository.save(item);
+    }
+
+    // ==================== InventarioInquiryService ====================
+
+    @Test
+    void inquirySenzaFiltri_restituisceTuttiGliItem() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Item 1", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("50.00"));
+        creaItemPersonalizzato(utente, "Item 2", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+        creaItemPersonalizzato(utente, "Item 3", LocalDate.of(2024, 6, 10),
+                BrandAcquisti.OnePiece, TipoProdotto.CartaSingola, new BigDecimal("25.00"));
+
+        // inquiry senza filtri — solo username
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, null, null, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(3, risultati.getTotalElements());
+        // ordinati per data acquisto decrescente
+        Assertions.assertEquals("Item 3", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void inquiryFiltroBrand() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Pokemon Box", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Lego Set", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("120.00"));
+        creaItemPersonalizzato(utente, "Pokemon Card", LocalDate.of(2024, 5, 10),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("15.00"));
+
+        // filtro solo Pokemon
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, BrandAcquisti.Pokemon, null, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(2, risultati.getTotalElements());
+        risultati.getContent().forEach(item ->
+                Assertions.assertEquals(BrandAcquisti.Pokemon, item.brandProdotto()));
+    }
+
+    @Test
+    void inquiryFiltroTipoProdotto() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Box 1", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Carta 1", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("10.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, null, TipoProdotto.CartaSingola, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Carta 1", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void inquiryFiltroStatoAcquisto() {
+        var utente = creaUtenteDiTest();
+        var item1 = creaItemPersonalizzato(utente, "Item Acquistato", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        var item2 = creaItemPersonalizzato(utente, "Item Venduto", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+
+        // vendo il secondo item
+        aggiungiVenditaService.aggiungiVendita(new AggiungiVenditaRequest(
+                "testuser", item2.getId(), "150.00", "eBay", "2024-07-20", null));
+
+        // filtro solo Venduto
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, StatoAcq.Venduto, null, null, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Item Venduto", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void inquiryFiltroRangePrezzo() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Economico", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("10.00"));
+        creaItemPersonalizzato(utente, "Medio", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Costoso", LocalDate.of(2024, 5, 10),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("200.00"));
+
+        // filtro prezzo tra 50 e 150
+        var request = new InventarioInquiryRequest(
+                "testuser", new BigDecimal("50.00"), new BigDecimal("150.00"), null, null, null, null, null, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Medio", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void inquiryFiltroRangeDate() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Gennaio", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("50.00"));
+        creaItemPersonalizzato(utente, "Marzo", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("60.00"));
+        creaItemPersonalizzato(utente, "Giugno", LocalDate.of(2024, 6, 10),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("70.00"));
+
+        // filtro da febbraio ad aprile
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, LocalDate.of(2024, 2, 1), LocalDate.of(2024, 4, 30), null, null, null, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Marzo", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void inquiryFiltriCombinati() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Pokemon Box Cheap", LocalDate.of(2024, 3, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("30.00"));
+        creaItemPersonalizzato(utente, "Pokemon Box Expensive", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("150.00"));
+        creaItemPersonalizzato(utente, "Lego Box", LocalDate.of(2024, 3, 25),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+        creaItemPersonalizzato(utente, "Pokemon Card", LocalDate.of(2024, 3, 28),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("5.00"));
+
+        // filtro: brand=Pokemon AND tipo=BoxSealed AND prezzo tra 20 e 100
+        var request = new InventarioInquiryRequest(
+                "testuser", new BigDecimal("20.00"), new BigDecimal("100.00"), null, null, null,
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, null, null);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Pokemon Box Cheap", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void inquiryPaginazione() {
+        var utente = creaUtenteDiTest();
+        // creo 5 item
+        for (int i = 1; i <= 5; i++) {
+            creaItemPersonalizzato(utente, "Item " + i, LocalDate.of(2024, i, 1),
+                    BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal(i * 10));
+        }
+
+        // pagina 0, 2 elementi per pagina
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, null, null, 0, 2);
+
+        var risultati = inventarioInquiryService.inquiry(request);
+
+        Assertions.assertEquals(5, risultati.getTotalElements());
+        Assertions.assertEquals(3, risultati.getTotalPages());
+        Assertions.assertEquals(2, risultati.getContent().size());
+        // ordinati per data decrescente, pagina 0 → Item 5 e Item 4
+        Assertions.assertEquals("Item 5", risultati.getContent().get(0).nomeAcquisto());
+        Assertions.assertEquals("Item 4", risultati.getContent().get(1).nomeAcquisto());
+    }
+
+    @Test
+    void inquiryKO_usernameMancante() {
+        var request = new InventarioInquiryRequest(
+                null, null, null, null, null, null, null, null, null, null);
+
+        var ex = Assertions.assertThrows(InventarioException.class,
+                () -> inventarioInquiryService.inquiry(request));
+
+        Assertions.assertEquals("ERR-INV-400", ex.getErrorCode());
+    }
+
+    @Test
+    void inquiryKO_utenteNonTrovato() {
+        var request = new InventarioInquiryRequest(
+                "utente_inesistente", null, null, null, null, null, null, null, null, null);
+
+        var ex = Assertions.assertThrows(InventarioException.class,
+                () -> inventarioInquiryService.inquiry(request));
+
+        Assertions.assertEquals("ERR-INV-404", ex.getErrorCode());
+    }
+
+    // ==================== InventarioInquiryV2Service (switch-case + custom query) ====================
+
+    @Test
+    void v2_inquirySenzaFiltri() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Item 1", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("50.00"));
+        creaItemPersonalizzato(utente, "Item 2", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, null, null, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(2, risultati.getTotalElements());
+    }
+
+    @Test
+    void v2_inquiryFiltroBrand() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Pokemon Box", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Lego Set", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("120.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, BrandAcquisti.Pokemon, null, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Pokemon Box", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryFiltroStato() {
+        var utente = creaUtenteDiTest();
+        var item1 = creaItemPersonalizzato(utente, "Item Acquistato", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        var item2 = creaItemPersonalizzato(utente, "Item Venduto", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+
+        aggiungiVenditaService.aggiungiVendita(new AggiungiVenditaRequest(
+                "testuser", item2.getId(), "150.00", "eBay", "2024-07-20", null));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, StatoAcq.Venduto, null, null, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Item Venduto", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryFiltroTipo() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Box", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Carta", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("10.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, null, TipoProdotto.CartaSingola, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Carta", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryRangePrezzo() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Economico", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("10.00"));
+        creaItemPersonalizzato(utente, "Medio", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Costoso", LocalDate.of(2024, 5, 10),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("200.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", new BigDecimal("50.00"), new BigDecimal("150.00"),
+                null, null, null, null, null, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Medio", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryRangeData() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Gennaio", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("50.00"));
+        creaItemPersonalizzato(utente, "Marzo", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("60.00"));
+        creaItemPersonalizzato(utente, "Giugno", LocalDate.of(2024, 6, 10),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("70.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null,
+                LocalDate.of(2024, 2, 1), LocalDate.of(2024, 4, 30),
+                null, null, null, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Marzo", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryBrandEStato() {
+        var utente = creaUtenteDiTest();
+        var item1 = creaItemPersonalizzato(utente, "Pokemon Acquistato", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        var item2 = creaItemPersonalizzato(utente, "Pokemon Venduto", LocalDate.of(2024, 2, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("90.00"));
+        creaItemPersonalizzato(utente, "Lego Acquistato", LocalDate.of(2024, 3, 10),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+
+        aggiungiVenditaService.aggiungiVendita(new AggiungiVenditaRequest(
+                "testuser", item2.getId(), "150.00", "eBay", "2024-07-20", null));
+
+        // filtro: brand=Pokemon AND stato=Acquistato
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null,
+                StatoAcq.Acquistato, BrandAcquisti.Pokemon, null, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Pokemon Acquistato", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryBrandETipo() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Pokemon Box", LocalDate.of(2024, 1, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "Pokemon Carta", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("5.00"));
+        creaItemPersonalizzato(utente, "Lego Box", LocalDate.of(2024, 5, 10),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("100.00"));
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null,
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Pokemon Carta", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryMultiplo_treFiltri() {
+        var utente = creaUtenteDiTest();
+        creaItemPersonalizzato(utente, "Match", LocalDate.of(2024, 3, 15),
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "No Brand", LocalDate.of(2024, 3, 20),
+                BrandAcquisti.Lego, TipoProdotto.BoxSealed, new BigDecimal("80.00"));
+        creaItemPersonalizzato(utente, "No Tipo", LocalDate.of(2024, 3, 25),
+                BrandAcquisti.Pokemon, TipoProdotto.CartaSingola, new BigDecimal("5.00"));
+
+        // filtro: brand=Pokemon AND tipo=BoxSealed AND prezzo tra 50 e 150 (3 filtri → MULTIPLO)
+        var request = new InventarioInquiryRequest(
+                "testuser", new BigDecimal("50.00"), new BigDecimal("150.00"),
+                null, null, null,
+                BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, null, null);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(1, risultati.getTotalElements());
+        Assertions.assertEquals("Match", risultati.getContent().getFirst().nomeAcquisto());
+    }
+
+    @Test
+    void v2_inquiryPaginazione() {
+        var utente = creaUtenteDiTest();
+        for (int i = 1; i <= 5; i++) {
+            creaItemPersonalizzato(utente, "Item " + i, LocalDate.of(2024, i, 1),
+                    BrandAcquisti.Pokemon, TipoProdotto.BoxSealed, new BigDecimal(i * 10));
+        }
+
+        var request = new InventarioInquiryRequest(
+                "testuser", null, null, null, null, null, null, null, 0, 2);
+
+        var risultati = inventarioInquiryV2Service.inquiry(request);
+
+        Assertions.assertEquals(5, risultati.getTotalElements());
+        Assertions.assertEquals(3, risultati.getTotalPages());
+        Assertions.assertEquals(2, risultati.getContent().size());
+    }
+
+    @Test
+    void v2_inquiryKO_usernameMancante() {
+        var request = new InventarioInquiryRequest(
+                null, null, null, null, null, null, null, null, null, null);
+
+        var ex = Assertions.assertThrows(InventarioException.class,
+                () -> inventarioInquiryV2Service.inquiry(request));
+
+        Assertions.assertEquals("ERR-INV-400", ex.getErrorCode());
     }
 }
