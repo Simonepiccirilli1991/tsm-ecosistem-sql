@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -52,6 +53,8 @@ public class InventarioServiceTest {
     UtenteRepository utenteRepository;
     @Autowired
     InventarioRepository inventarioRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
 
     @BeforeEach
@@ -69,7 +72,7 @@ public class InventarioServiceTest {
         utente.setNome("Test");
         utente.setCognome("User");
         utente.setEmail("test@test.com");
-        utente.setPassword("password123");
+        utente.setPassword(passwordEncoder.encode("password123"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
         return utenteRepository.save(utente);
@@ -198,7 +201,7 @@ public class InventarioServiceTest {
         utente2.setNome("Altro");
         utente2.setCognome("Utente");
         utente2.setEmail("altro@test.com");
-        utente2.setPassword("pass");
+        utente2.setPassword(passwordEncoder.encode("pass"));
         utente2.setDataRegistrazione(LocalDateTime.now());
         utente2.setRuolo(UtenteRoles.User);
         utenteRepository.save(utente2);

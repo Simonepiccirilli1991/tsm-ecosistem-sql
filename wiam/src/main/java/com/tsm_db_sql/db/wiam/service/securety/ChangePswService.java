@@ -6,6 +6,7 @@ import com.tsm_db_sql.db.wiam.repository.UtenteRepository;
 import com.tsm_db_sql.db.wiam.model.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,8 @@ public class ChangePswService {
 
 
     private final UtenteRepository utenteRepository;
+    // PasswordEncoder (BCrypt) — per verificare la vecchia password e hashare la nuova
+    private final PasswordEncoder passwordEncoder;
 
 
     public BaseResponse changePsw(ChangePswRequest request){
@@ -31,19 +34,22 @@ public class ChangePswService {
                     return new UtenteException("Utente non trovato","ERR-UT-404-P");
                 });
 
-        // controllo che password matchino
-        if(!utente.getPassword().equals(request.oldPassword())){
+        // Verifica vecchia password con BCrypt — matches() confronta la password in chiaro
+        // con l'hash BCrypt salvato nel DB senza mai esporre il testo originale
+        if(!passwordEncoder.matches(request.oldPassword(), utente.getPassword())){
            log.error("ChangePsw service error password non match: {}", request.username());
            throw new UtenteException("Password attuale non corretta","ERR-UT-401-P");
         }
-        // controllo che la nuova psw sia diversa dalla vecchia
-        if(utente.getPassword().equals(request.newPassword())){
+        // Verifica che la nuova password sia diversa dalla vecchia.
+        // Usiamo matches() anche qui perché non possiamo confrontare hash direttamente
+        // (BCrypt produce hash diversi per lo stesso input grazie al salt random).
+        if(passwordEncoder.matches(request.newPassword(), utente.getPassword())){
             log.error("ChangePsw service error password nuova uguale alla vecchia: {}", request.username());
             throw new UtenteException("La nuova password deve essere diversa da quella attuale","ERR-UT-400-P");
         }
 
-        // cambio effettivamente la psw
-        utente.setPassword(request.newPassword());
+        // Hash della nuova password con BCrypt prima di salvarla
+        utente.setPassword(passwordEncoder.encode(request.newPassword()));
         utente.getUtenteSecurety().setLastPaswordChange(LocalDateTime.now());
         utenteRepository.save(utente);
         log.info("ChangePswService ended successfully for utente: {}",request.username());

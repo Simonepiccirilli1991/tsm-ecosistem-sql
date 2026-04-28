@@ -34,6 +34,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  # --- OAuth2 Resource Server ---
+  # URI per scaricare le chiavi pubbliche (JWK Set) dall'auth-server.
+  # WIAM usa queste chiavi per verificare la firma dei JWT ricevuti nelle richieste.
+  # In sviluppo l'auth-server gira su porta 9000.
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/.well-known/jwks.json
 #Chiave segreta wiam otp
 wiam:
   otp:

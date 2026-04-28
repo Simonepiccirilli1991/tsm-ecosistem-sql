@@ -8,6 +8,7 @@ import com.tsm_db_sql.db.wiam.model.response.BaseResponse;
 import com.tsm_db_sql.db.wiam.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,8 @@ public class RetrivePswStep3Service {
 
 
     private final UtenteRepository utenteRepository;
+    // PasswordEncoder (BCrypt) — per hashare la nuova password nel recupero password
+    private final PasswordEncoder passwordEncoder;
 
 
     public BaseResponse retrivePswStep3(RetrivePswStep3Request request){
@@ -48,8 +51,8 @@ public class RetrivePswStep3Service {
             throw new UtenteException("Chiave non valida","ERR-UT-403");
         }
 
-        // aggiorno password
-        utente.setPassword(request.password());
+        // Hash della nuova password con BCrypt prima di salvarla nel DB
+        utente.setPassword(passwordEncoder.encode(request.password()));
         // cancello stepChiave in quanto ormai usati
         cancellaStepChiave(utenteSecurety,utente);
         log.info("RetrivePswStep3 service completed successfully for utente: {}",request.username());

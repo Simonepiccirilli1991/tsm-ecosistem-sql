@@ -39,7 +39,9 @@ public class Utente {
     private String email;
     @Column(unique = true, nullable = false, length = 50)
     private String username;
-    @Column(nullable = false)
+    // La password è salvata come hash BCrypt (~60 caratteri).
+    // Non salviamo MAI la password in chiaro nel database.
+    @Column(nullable = false, length = 72)
     private String password;
     @Column(nullable = false)
     private LocalDateTime dataRegistrazione;

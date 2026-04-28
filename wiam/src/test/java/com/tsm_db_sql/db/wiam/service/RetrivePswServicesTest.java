@@ -17,13 +17,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @SpringBootTest
-@Profile("test")
+@ActiveProfiles("test")
 public class RetrivePswServicesTest {
 
 
@@ -35,6 +36,9 @@ public class RetrivePswServicesTest {
     RetrivePswStep2Service retrivePswStep2Service;
     @Autowired
     RetrivePswStep3Service retrivePswStep3Service;
+    // PasswordEncoder per hashare le password degli utenti di test
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
 
     @BeforeEach
@@ -50,7 +54,7 @@ public class RetrivePswServicesTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -76,7 +80,7 @@ public class RetrivePswServicesTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -107,7 +111,7 @@ public class RetrivePswServicesTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -135,7 +139,7 @@ public class RetrivePswServicesTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -164,7 +168,7 @@ public class RetrivePswServicesTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -189,8 +193,8 @@ public class RetrivePswServicesTest {
 
         Assertions.assertEquals("Password aggiornata con successo",resp3.messaggio());
         var utAggiornato = utenteRepository.findByUsername("Ajeje");
-
-        Assertions.assertEquals("Gigino212",utAggiornato.get().getPassword());
+        // La password è ora un hash BCrypt — verifichiamo con matches()
+        Assertions.assertTrue(passwordEncoder.matches("Gigino212", utAggiornato.get().getPassword()));
     }
 
     @Test
@@ -201,7 +205,7 @@ public class RetrivePswServicesTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 

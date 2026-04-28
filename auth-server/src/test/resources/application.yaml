@@ -1,0 +1,8 @@
+# Test configuration for auth-server
+spring:
+  application:
+    name: auth-server-test
+
+auth-server:
+  wiam:
+    base-url: http://localhost:8080

@@ -1,0 +1,9 @@
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/AuthServerApplication.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/config/RsaKeyConfig.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/controller/JwkController.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/controller/TokenController.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/model/TokenRequest.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/model/TokenResponse.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/model/WiamUserResponse.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/service/TokenService.java
+/Users/simonepiccirilli/Desktop/progetti dev experiment/TSM-RESELL-SQL/auth-server/src/main/java/com/tsm_db_sql/db/authserver/service/WiamClientService.java

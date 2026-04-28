@@ -1,0 +1,24 @@
+# Auth Server — OAuth2 Authorization Server per TSM Resell
+# Emette JWT firmati con RSA per autenticare gli utenti nell'ecosistema.
+
+server:
+  # Porta diversa da WIAM (8080) per poter eseguire entrambi in locale
+  port: 9000
+
+spring:
+  application:
+    name: auth-server
+
+# --- Configurazione Auth Server ---
+auth-server:
+  wiam:
+    # URL base di WIAM — l'auth-server chiama questo endpoint per verificare
+    # le credenziali degli utenti prima di emettere un token.
+    # In sviluppo: WIAM gira su localhost:8080
+    # In produzione: usare il nome del servizio (es. http://wiam-service:8080)
+    base-url: ${WIAM_BASE_URL:http://localhost:8080}
+
+# --- Logging ---
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"

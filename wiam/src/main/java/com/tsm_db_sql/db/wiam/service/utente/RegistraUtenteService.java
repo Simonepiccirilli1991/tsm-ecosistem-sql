@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -27,6 +28,9 @@ public class RegistraUtenteService {
 
 
     private final UtenteRepository utenteRepository;
+    // PasswordEncoder (BCrypt) — usato per hashare la password prima di salvarla nel DB.
+    // Non salviamo MAI la password in chiaro: BCrypt genera un hash con salt random incluso.
+    private final PasswordEncoder passwordEncoder;
     @Value("${roles.admin.email}")
     private String emailAdmin;
     @Value("${roles.collaborator.email}")
@@ -53,7 +57,10 @@ public class RegistraUtenteService {
         // se non esiste lo registro
         var utente = new Utente();
         utente.setUsername(request.username());
-        utente.setPassword(request.password());
+        // Hash della password con BCrypt prima di salvare — la password in chiaro
+        // non viene mai persistita. L'hash include un salt random, quindi registrazioni
+        // con la stessa password producono hash diversi (protezione rainbow table).
+        utente.setPassword(passwordEncoder.encode(request.password()));
         utente.setEmail(request.email());
         utente.setNome(request.nome());
         utente.setCognome(request.cognome());
@@ -81,8 +88,9 @@ public class RegistraUtenteService {
                     return new UtenteException("Utente not found con username: "+request.username(),"ERR-UT-404");
                 });
 
-        // controllo match password
-        if(!utente.getPassword().equals(request.password())) {
+        // Verifica password con BCrypt — confronta la password in chiaro della request
+        // con l'hash BCrypt salvato nel DB. Non usiamo .equals() perché l'hash è diverso ogni volta.
+        if(!passwordEncoder.matches(request.password(), utente.getPassword())) {
             log.error("Passwords don't match, don't authorized for delete utente");
             throw new UtenteException("Passord don't match for delete utente","ERR-UT-401");
         }

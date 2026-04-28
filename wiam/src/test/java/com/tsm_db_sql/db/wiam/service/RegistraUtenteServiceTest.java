@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,10 @@ public class RegistraUtenteServiceTest {
     UtenteRepository utenteRepository;
     @Autowired
     LoginUtenteService loginUtenteService;
+    // PasswordEncoder per hashare le password quando creiamo utenti di test manualmente.
+    // I servizi ora usano BCrypt, quindi le password nel DB devono essere hash validi.
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
 
     @BeforeEach
@@ -54,6 +59,9 @@ public class RegistraUtenteServiceTest {
         Assertions.assertTrue(utente.isPresent());
         Assertions.assertEquals("Brazof",utente.get().getCognome());
         Assertions.assertEquals(UtenteRoles.Admin,utente.get().getRuolo());
+        // La password nel DB è un hash BCrypt, non il testo in chiaro.
+        // Verifichiamo con matches() che l'hash corrisponda alla password originale.
+        Assertions.assertTrue(passwordEncoder.matches("BeaMerda", utente.get().getPassword()));
 
         // controllo securety
         var sec = utente.get().getUtenteSecurety();
@@ -69,7 +77,9 @@ public class RegistraUtenteServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        // Hash della password — i servizi usano passwordEncoder.matches() per la verifica,
+        // quindi il DB deve contenere hash BCrypt anche nei test.
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -92,7 +102,7 @@ public class RegistraUtenteServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -115,7 +125,7 @@ public class RegistraUtenteServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -138,7 +148,7 @@ public class RegistraUtenteServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -160,7 +170,7 @@ public class RegistraUtenteServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 

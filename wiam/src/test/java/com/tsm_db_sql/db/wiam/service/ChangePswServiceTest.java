@@ -16,12 +16,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 
 @SpringBootTest
-@Profile("test")
+@ActiveProfiles("test")
 public class ChangePswServiceTest {
 
 
@@ -35,6 +36,9 @@ public class ChangePswServiceTest {
     RetrivePswStep3Service  retrivePswStep3Service;
     @Autowired
     ChangePswService changePswService;
+    // PasswordEncoder per creare utenti di test con password hashate in BCrypt
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
 
     @BeforeEach
@@ -50,7 +54,7 @@ public class ChangePswServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
         // siccome non chiamo api se non setto si sfascia perche giustamente va in nullpointer
@@ -65,7 +69,8 @@ public class ChangePswServiceTest {
 
         Assertions.assertEquals("Password cambiata con successo",resp.messaggio());
         var ut = utenteRepository.findByUsername("Ajeje");
-        Assertions.assertEquals("Casaparlante",ut.get().getPassword());
+        // La password è ora un hash BCrypt — verifichiamo con matches() e non con assertEquals()
+        Assertions.assertTrue(passwordEncoder.matches("Casaparlante", ut.get().getPassword()));
     }
 
     @Test
@@ -76,7 +81,7 @@ public class ChangePswServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("BeaMerda");
+        utente.setPassword(passwordEncoder.encode("BeaMerda"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 
@@ -99,7 +104,7 @@ public class ChangePswServiceTest {
         utente.setNome("Ajeje");
         utente.setCognome("Brazof");
         utente.setEmail("asd@gmail.com");
-        utente.setPassword("Casaparlante");
+        utente.setPassword(passwordEncoder.encode("Casaparlante"));
         utente.setDataRegistrazione(LocalDateTime.now());
         utente.setRuolo(UtenteRoles.User);
 

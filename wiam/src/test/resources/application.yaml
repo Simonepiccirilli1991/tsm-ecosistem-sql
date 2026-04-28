@@ -41,6 +41,16 @@ roles:
     console:
       enabled: false
 
+  # --- Security nei test ---
+  # Nei test non c'è un auth-server attivo, quindi usiamo una chiave RSA pubblica
+  # generata localmente per firmare/verificare i JWT di test.
+  # La chiave viene configurata programmaticamente in SecurityTestConfig.
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9999/.well-known/jwks.json
+
 # --- Logging ---
 # Stesso pattern del runtime, con tracingId dal MDC.
 logging:
