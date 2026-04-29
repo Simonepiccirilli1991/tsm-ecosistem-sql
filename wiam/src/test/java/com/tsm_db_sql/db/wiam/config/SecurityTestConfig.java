@@ -26,6 +26,24 @@ import java.util.UUID;
  * (che normalmente punta al JWK Set URI dell'auth-server).
  * Il JwtEncoder è disponibile per i test che devono generare JWT di test.
  *
+ * === NOTA PER I TEST DEGLI ENDPOINT INTERNI ===
+ * Gli endpoint /api/internal/** richiedono un JWT con scope "internal" (Client Credentials).
+ * Se in futuro si scrivono test HTTP (MockMvc/WebTestClient) che chiamano endpoint interni,
+ * bisogna generare un JWT con il claim scope="internal" usando il JwtEncoder qui esposto.
+ * Esempio:
+ *   var claims = JwtClaimsSet.builder()
+ *       .subject("auth-server-client")
+ *       .issuer("tsm-auth-server")
+ *       .claim("scope", "internal")
+ *       .issuedAt(Instant.now())
+ *       .expiresAt(Instant.now().plusSeconds(300))
+ *       .build();
+ *   var token = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+ *   // Poi usare: mockMvc.perform(get(...).header("Authorization", "Bearer " + token))
+ *
+ * I test attuali chiamano i servizi direttamente (senza passare da HTTP/SecurityFilterChain),
+ * quindi NON hanno bisogno di token JWT — la sicurezza non viene applicata a quel livello.
+ *
  * Attivo solo con profilo "test" — in runtime usa la configurazione reale
  * che punta all'auth-server tramite jwk-set-uri.
  */

@@ -1,6 +1,7 @@
 com/tsm_db_sql/db/authserver/service/TokenService.class
 com/tsm_db_sql/db/authserver/config/RsaKeyConfig.class
 com/tsm_db_sql/db/authserver/controller/JwkController.class
+com/tsm_db_sql/db/authserver/service/ClientCredentialsService.class
 com/tsm_db_sql/db/authserver/model/WiamUserResponse.class
 com/tsm_db_sql/db/authserver/AuthServerApplication.class
 com/tsm_db_sql/db/authserver/model/TokenRequest.class

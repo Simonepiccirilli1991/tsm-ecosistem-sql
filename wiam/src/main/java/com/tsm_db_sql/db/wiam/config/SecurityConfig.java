@@ -42,8 +42,14 @@ public class SecurityConfig {
      * - /api/v1/utente/registra — registrazione utente (non ancora autenticato)
      * - /api/v1/utente/login — login legacy (usato anche dall'auth-server)
      * - /api/v1/utente/securety/retrivestep* — recupero password (utente non può autenticarsi)
-     * - /api/internal/** — endpoint interni per comunicazione tra microservizi
      * - /h2-console/** — console H2 per sviluppo
+     *
+     * Endpoint interni (protetti con Client Credentials — scope "internal"):
+     * - /api/internal/** — solo l'auth-server può invocarli
+     *   L'auth-server si auto-genera un JWT con scope="internal" e lo invia come Bearer token.
+     *   WIAM verifica che il JWT sia valido E che contenga lo scope richiesto.
+     *   Spring Security converte automaticamente il claim "scope" del JWT in authorities
+     *   con prefisso "SCOPE_", quindi scope="internal" diventa authority "SCOPE_internal".
      *
      * Tutti gli altri endpoint richiedono un JWT valido nel header Authorization.
      */
@@ -77,10 +83,23 @@ public class SecurityConfig {
                     "/api/v1/utente/securety/retrivestep3"
                 ).permitAll()
 
-                // Endpoint interni — usati per comunicazione tra microservizi (auth-server → WIAM).
-                // In produzione questi vanno protetti a livello di rete (firewall/service mesh),
-                // non tramite JWT, perché l'auth-server stesso non ha ancora un token.
-                .requestMatchers("/api/internal/**").permitAll()
+                // === ENDPOINT INTERNI — PROTETTI CON CLIENT CREDENTIALS ===
+                // Prima erano "permitAll" (chiunque poteva chiamarli).
+                // Ora richiedono un JWT con scope "internal" — solo l'auth-server lo possiede.
+                //
+                // hasAuthority("SCOPE_internal") funziona così:
+                // 1. WIAM riceve la richiesta con header "Authorization: Bearer <jwt>"
+                // 2. Spring Security valida il JWT (firma RSA + scadenza)
+                // 3. Estrae il claim "scope" dal JWT (es. "internal")
+                // 4. Lo converte in authority aggiungendo il prefisso "SCOPE_" → "SCOPE_internal"
+                // 5. Verifica che l'authority richiesta sia presente → se sì, 200 OK
+                // 6. Se manca → 403 Forbidden (token valido ma senza i permessi giusti)
+                //
+                // Questo impedisce che:
+                // - Un client esterno chiami /api/internal/** (non ha scope "internal")
+                // - Un utente autenticato chiami /api/internal/** (il suo token ha solo ruolo, non scope)
+                // - Solo l'auth-server, che si auto-genera un JWT con scope "internal", può accedere
+                .requestMatchers("/api/internal/**").hasAuthority("SCOPE_internal")
 
                 // H2 console — solo per sviluppo, disabilitata in prod tramite application-prod.yaml
                 .requestMatchers("/h2-console/**").permitAll()

@@ -12,10 +12,17 @@ import org.springframework.web.bind.annotation.*;
  * Controller per endpoint INTERNI — usati esclusivamente per la comunicazione
  * tra microservizi (auth-server → WIAM). NON sono destinati all'accesso diretto dei client.
  *
- * Il prefisso /api/internal/ segnala che questi endpoint:
- * 1. Sono permit-all in SecurityConfig (l'auth-server non ha un JWT proprio)
- * 2. In produzione vanno protetti a livello di rete (firewall, service mesh, VPN)
- *    per impedire che client esterni li chiamino direttamente
+ * === PROTEZIONE CON CLIENT CREDENTIALS (OAuth2 B2B) ===
+ * Questi endpoint sono protetti con OAuth2 Client Credentials:
+ * - Richiedono un JWT valido con scope "internal" nell'header Authorization
+ * - Solo l'auth-server possiede un token con questo scope (se lo auto-genera)
+ * - Un utente normale (con token utente) NON può accedere (manca lo scope)
+ * - Una richiesta senza token riceve 401 Unauthorized
+ * - Una richiesta con token senza scope "internal" riceve 403 Forbidden
+ *
+ * Questo è un miglioramento rispetto alla protezione solo a livello di rete:
+ * anche se qualcuno riesce ad accedere alla rete interna, non può invocare
+ * questi endpoint senza un JWT valido firmato dall'auth-server.
  *
  * Endpoint:
  * - POST /api/internal/v1/utente/verifica-credenziali
